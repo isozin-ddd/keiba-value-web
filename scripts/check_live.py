@@ -21,7 +21,7 @@ def check(base):
         except (urllib.error.HTTPError,urllib.error.URLError,AssertionError):
             if attempt==11:raise
             time.sleep(5)
-    for path in ['app.js','core.js','predictions.json']:
+    for path in ['app.js','core.js','predictions.json','future.json','analysis.json']:
         with urllib.request.urlopen(urllib.parse.urljoin(base,path),timeout=20) as r:
             assert r.status==200 and r.read()
     with urllib.request.urlopen(urllib.parse.urljoin(base,'predictions.json'),timeout=20) as r:

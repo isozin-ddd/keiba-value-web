@@ -52,3 +52,34 @@ export function rank(race, odds) {
   return race.runners.map(h => ({...h, ...metrics(h.probability, odds.get(`${race.id}:${h.number}`) ?? h.final_odds ?? 1)}))
     .sort((a,b) => b.ev - a.ev || a.number - b.number);
 }
+
+function timestamp(v){return text(v)&&/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(v)&&Number.isFinite(Date.parse(v));}
+export function validateFuture(data){
+ exactKeys(data,['schema_version','mode','generated_at','status','message','model_version','races']);
+ if(data.schema_version!==2||data.mode!=='future'||!['ready','unavailable'].includes(data.status)||!timestamp(data.generated_at)||!text(data.message,400)||!text(data.model_version,80)||!Array.isArray(data.races)||data.races.length>100)throw Error('未来予測データの形式が不正です');
+ if((data.status==='ready')!==Boolean(data.races.length))throw Error('未来予測の状態と件数が不一致です');
+ const ids=new Set();
+ for(const r of data.races){
+  exactKeys(r,['id','date','track','number','start_at','prediction_at','entry_observed_at','source_url','runners']);
+  if(!/^\d{12}$/.test(r.id)||ids.has(r.id)||!text(r.track,30)||!Number.isInteger(r.number)||r.number<1||r.number>12)throw Error('未来レース情報が不正です');ids.add(r.id);
+  if(![r.start_at,r.prediction_at,r.entry_observed_at].every(timestamp)||!(Date.parse(r.entry_observed_at)<=Date.parse(r.prediction_at)&&Date.parse(r.prediction_at)<Date.parse(r.start_at))||Date.parse(r.prediction_at)>Date.parse(data.generated_at)||new Date(Date.parse(r.start_at)+9*3600000).toISOString().slice(0,10)!==r.date)throw Error('発走前の時刻検証に失敗しました');
+  const u=new URL(r.source_url);if(u.protocol!=='https:'||u.hostname!=='www.jra.go.jp'||u.pathname!=='/JRADB/accessD.html'||u.username||u.password||u.hash||[...u.searchParams.keys()].join(',')!=='CNAME'||!/^pw01dde[\da-zA-Z/]+$/.test(u.searchParams.get('CNAME')))throw Error('公式出馬表の出典が不正です');
+  if(!Array.isArray(r.runners)||r.runners.length<2||r.runners.length>18)throw Error('未来出走馬数が不正です');
+  const numbers=new Set();let sum=0;
+  for(const h of r.runners){
+   exactKeys(h,['number','name','probability','prestart_odds','odds_observed_at','history_count']);
+   if(!Number.isInteger(h.number)||h.number<1||h.number>18||numbers.has(h.number)||!text(h.name,50)||!Number.isInteger(h.history_count)||h.history_count<0||h.history_count>5)throw Error('未来の馬情報が不正です');numbers.add(h.number);metrics(h.probability,h.prestart_odds??1);sum+=h.probability;
+   if(h.prestart_odds===null){if(h.odds_observed_at!==null)throw Error('未取得オッズの時刻が不正です');}
+   else if(!timestamp(h.odds_observed_at)||Date.parse(h.odds_observed_at)>Date.parse(r.prediction_at)||Date.parse(h.odds_observed_at)>=Date.parse(r.start_at)||Date.parse(r.prediction_at)-Date.parse(h.odds_observed_at)>24*3600000)throw Error('発走前オッズの時刻が不正です');
+  }
+  if(Math.abs(sum-1)>1e-6)throw Error('未来勝率の合計は100%が必要です');
+ }
+ return data;
+}
+export function validateAnalysis(data){
+ exactKeys(data,['schema_version','mode','generated_at','model_version','prediction_created_at','races']);
+ if(data.schema_version!==1||data.mode!=='historical_details'||!timestamp(data.generated_at)||(data.prediction_created_at!==null&&!timestamp(data.prediction_created_at))||!text(data.model_version,80)||!Array.isArray(data.races)||data.races.length>1000)throw Error('事後成績データの形式が不正です');
+ const ids=new Set();
+ for(const r of data.races){exactKeys(r,['id','runners']);if(!/^\d{12}$/.test(r.id)||ids.has(r.id)||!Array.isArray(r.runners)||r.runners.length<2||r.runners.length>18)throw Error('事後レース情報が不正です');ids.add(r.id);const nums=new Set();for(const h of r.runners){exactKeys(h,['number','finish','win_payout_yen']);if(!Number.isInteger(h.number)||h.number<1||h.number>18||nums.has(h.number)||!Number.isInteger(h.finish)||h.finish<1||h.finish>18||!Number.isInteger(h.win_payout_yen)||h.win_payout_yen<0)throw Error('事後成績が不正です');nums.add(h.number);}}
+ return data;
+}

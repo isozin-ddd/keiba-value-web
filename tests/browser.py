@@ -47,12 +47,35 @@ def run(bt,base,engine,executable=None):
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Horizontal overflow'
  assert page.evaluate('getComputedStyle(document.documentElement).colorScheme')=='dark'
  out=ROOT/'output';out.mkdir(exist_ok=True);page.screenshot(path=str(out/f'{engine}-iphone-{payload["mode"]}.png'),full_page=True)
+ # Check the ACTUAL published future state and return without losing historical odds.
+ page.select_option('#mode','future')
+ future_payload=page.request.get(base.rstrip('/')+'/future.json').json()
+ if future_payload['status']=='unavailable':
+  assert page.locator('#cards .card').count()==0
+  assert page.locator('#filters').is_hidden()
+  assert '架空' not in page.locator('#notice').inner_text() or '表示しません' in page.locator('#notice').inner_text()
+  assert 'ありません' in page.locator('#notice').inner_text() or '取得できません' in page.locator('#notice').inner_text()
+ else:assert page.locator('#notice').inner_text()
+ page.screenshot(path=str(out/f'{engine}-iphone-future-actual.png'),full_page=True)
+ page.select_option('#mode','past');page.locator('#cards .card').first.wait_for()
+ assert not errors,errors
  # Reject malformed JSON, never silently call it real data or replace it with a demo.
  page.route('**/predictions.json',lambda route:route.fulfill(json={'secret':'not a public payload'}))
  page.reload(wait_until='networkidle');page.locator('#error').wait_for(state='visible');assert page.locator('#cards .card').count()==0
  page.unroute('**/predictions.json');page.get_by_role('button',name='再読み込み').click();page.locator('#cards .card').first.wait_for()
+ # Artificial protocol fixture ONLY; never written to the public JSON or counted as real inference.
+ fixture={'schema_version':2,'mode':'future','generated_at':'2099-01-01T01:00:00Z','status':'ready','message':'人工の画面テスト専用','model_version':'fixture-only','races':[{'id':'209905010101','date':'2099-01-02','track':'東京','number':1,'start_at':'2099-01-02T01:00:00Z','prediction_at':'2099-01-01T01:00:00Z','entry_observed_at':'2099-01-01T00:00:00Z','source_url':'https://www.jra.go.jp/JRADB/accessD.html?CNAME=pw01dde1005209901010120990102/AA','runners':[{'number':1,'name':'画面テストA','probability':.6,'prestart_odds':2.5,'odds_observed_at':'2099-01-01T00:00:00Z','history_count':5},{'number':2,'name':'画面テストB','probability':.4,'prestart_odds':None,'odds_observed_at':None,'history_count':0}]}]}
+ page.route('**/future.json',lambda route:route.fulfill(json=fixture))
+ page.reload(wait_until='networkidle');page.select_option('#mode','future');page.locator('#cards .card').first.wait_for()
+ assert '発走前' in page.locator('#notice').inner_text()
+ f=page.locator('#cards .card').first;f.locator('input[type=number]').fill('10');assert f.locator('.ev-value').inner_text()=='6.000倍'
+ assert '取得' in f.locator('.source-note').inner_text();assert '5/5' in f.locator('.history-note').inner_text()
+ assert '履歴不足' in page.locator('.history-note').nth(1).inner_text()
+ page.get_by_role('button',name='レースのオッズを初期値に戻す').click();assert page.locator('input[type=number]').first.input_value()=='2.5'
+ assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+ page.unroute('**/future.json');assert not errors,errors
  context.close();browser.close()
- print(f'{engine}: actual {payload["mode"]} JSON, odds, EV, fair odds, ranking, reset, touch, error and dark 390x844: PASS')
+ print(f'{engine}: actual {payload["mode"]} JSON, odds, EV, fair odds, ranking, reset, touch, error, mode switch, actual future state and artificial future controls, dark 390x844: PASS')
 if __name__=='__main__':
  a=argparse.ArgumentParser();a.add_argument('--base-url');a.add_argument('--engine',choices=['both','chromium','webkit'],default='both');a.add_argument('--executable');args=a.parse_args()
  server=None
