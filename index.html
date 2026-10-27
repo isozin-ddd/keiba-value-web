@@ -101,7 +101,24 @@ function updateRanking(){
 async function start(){
  try{
   const response=await fetch("./predictions.json",{cache:"no-store"});
-  if(response.ok){const incoming=sanitize(await response.json());if(incoming.dataType==="verified_actual"){data=incoming;document.querySelector("#notice").textContent="検証済み予測データを表示しています。最終オッズは事後分析用です。";}}
+  if(response.ok){
+   const raw=await response.json();
+   // Accept only the reviewed export format produced by the private model.
+   if(raw.schema_version===1&&raw.mode==="real"&&raw.model_status==="trained"&&Array.isArray(raw.races)){
+     const mapped={races:raw.races.map(r=>({
+       id:r.id,
+       label:[r.date,r.track,r.number+"R"].join(" "),
+       runners:r.runners.map(h=>({
+         horse:h.name,number:h.number,probability:h.probability,finalOdds:h.final_odds
+       }))
+     }))};
+     if(mapped.races.some(r=>r.runners.some(h=>h.finalOdds==null))){
+       throw Error("最終オッズの未確認値があります。実データ表示は保留します");
+     }
+     data=sanitize(mapped);
+     document.querySelector("#notice").textContent="検証済み予測データを表示中。最終オッズによる期待値は事後分析用で、購入時の回収率を保証しません。";
+   }
+ }
  }catch(e){console.info("デモモード:",e.message)}
  const select=document.querySelector("#race");for(const race of data.races){const option=element("option","",race.label);option.value=race.id;select.append(option)}
  select.addEventListener("change",()=>{raceId=select.value;draw()});raceId=data.races[0].id;draw();
