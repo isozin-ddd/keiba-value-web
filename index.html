@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0e1726">
+<title>競馬AI｜オッズ・期待値メーター</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",system-ui,sans-serif;background:#0c1320;color:#eff4ff}
+*{box-sizing:border-box}body{margin:0;min-height:100vh}header,main,footer{max-width:960px;margin:auto;padding:22px 18px}
+header{padding-top:32px}h1{font-size:clamp(24px,5vw,35px);margin:0 0 8px}h2{font-size:19px;margin:0}.sub{color:#a9b6cc;font-size:14px;line-height:1.6}
+.notice{background:#18283b;border:1px solid #34506f;padding:12px 15px;border-radius:12px;margin:18px 0;line-height:1.65}
+label{display:block;font-size:13px;color:#b1c3d9;margin-bottom:7px}
+select,input[type=number]{background:#111e30;color:white;border:1px solid #4c6582;border-radius:10px;padding:12px;max-width:100%;font-size:16px}
+select{width:100%}.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:16px;margin-top:18px}
+.card{background:#142033;border:1px solid #2e445e;border-radius:18px;padding:18px;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.muted{color:#b1bed2;font-size:13px}
+.numbers{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:15px 0}
+.number{padding:11px;background:#0d1929;border-radius:12px}.number strong{display:block;margin-top:5px;font-size:23px}
+.controls{display:flex;gap:12px;align-items:center}.controls input[type=range]{flex:1;min-width:0;accent-color:#52d8ad;touch-action:pan-y}.controls input[type=number]{width:110px}
+.bar{height:16px;background:#3e3040;border-radius:12px;overflow:hidden;margin:12px 0 6px;position:relative}.fill{height:100%;background:#40c99e;width:0;transition:width .08s}
+.bar:before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:2px solid #f7f4e7;z-index:1}
+.good{color:#6cf0bc}.bad{color:#fca7a7}button{background:#2a405d;color:white;border:1px solid #4e6886;border-radius:9px;padding:9px 13px;font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:11px 8px;text-align:left;border-bottom:1px solid #33475d;font-size:14px}th{color:#b0c1d8}td:last-child{text-align:right}
+footer{font-size:13px;color:#b4bfd0;line-height:1.7}
+@media(max-width:480px){header,main,footer{padding-left:14px;padding-right:14px}.card{padding:15px}.numbers{gap:7px}.number strong{font-size:20px}}
+</style>
+</head>
+<body><header><h1>🐎 競馬AI オッズ・期待値メーター</h1><div class="sub">単勝オッズを動かすと期待値・参考回収率・ランキングが即時に変わります。</div></header>
+<main><div id="notice" class="notice" role="status">デモ表示です。架空の勝率・オッズを使用しており、実際のAI予想ではありません。</div>
+<label for="race">レース選択</label><select id="race"></select>
+<div id="cards" class="cards"></div>
+<section class="card" style="margin-top:18px"><h2>期待値ランキング</h2><div id="ranking"></div></section></main>
+<footer>期待値倍率＝勝率×単勝オッズ。期待回収率＝期待値倍率×100%。利益率＝(期待値倍率−1)×100%。計算結果は入力勝率が正しい場合の理論値で、利益を保証しません。最終オッズは事後分析用で、発走前に購入できたオッズとは限りません。<p>GitHub Pagesで提供される静的デモアプリです。学習済みAI・検証済み実データとの接続は未完了です。</p></footer>
+<script>
+"use strict";
+const DEMO={races:[{id:"DEMO",label:"デモレース（架空）",runners:[
+{horse:"サンプルA（架空）",number:1,probability:.18,finalOdds:8.2},
+{horse:"サンプルB（架空）",number:2,probability:.12,finalOdds:7.5},
+{horse:"サンプルC（架空）",number:3,probability:.25,finalOdds:4.2},
+{horse:"その他（架空）",number:4,probability:.45,finalOdds:2.1}
+]}]};
+let data=DEMO,current=[],raceId="";
+const yen=n=>Number(n).toFixed(1),percent=n=>(100*n).toFixed(1)+"%";
+function sanitize(data){
+ if(!data||!Array.isArray(data.races)||!data.races.length)throw Error("レース情報がありません");
+ for(const race of data.races){
+  if(!race.id||!race.label||!Array.isArray(race.runners)||!race.runners.length)throw Error("レース形式が不正です");
+  let sum=0;
+  for(const h of race.runners){
+   if(typeof h.horse!=="string"||!h.horse||!Number.isFinite(h.probability)||h.probability<=0||h.probability>1||!Number.isFinite(h.finalOdds)||h.finalOdds<1)throw Error("馬別データの値が不正です");
+   sum+=h.probability;
+  }
+  if(Math.abs(sum-1)>.02)throw Error("レースの勝率合計が100%ではありません");
+ }
+ return data;
+}
+function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+function draw(){
+ const race=data.races.find(r=>r.id===raceId);current=race.runners.map(h=>({...h,odds:h.finalOdds}));
+ const area=document.querySelector("#cards");area.replaceChildren();
+ current.forEach((h,i)=>{
+  const card=element("article","card"),head=element("div","head");
+  const name=element("h2","",h.number+"番 "+h.horse);head.append(name);
+  const reset=element("button","","リセット");reset.type="button";reset.addEventListener("click",()=>{setOdds(h,h.finalOdds,range,num,metrics,fill);});head.append(reset);card.append(head);
+  const metrics=element("div","numbers");
+  const stat=(label,val)=>{const outer=element("div","number");outer.append(element("span","muted",label),element("strong","",val));metrics.append(outer)};
+  stat("AI想定勝率",percent(h.probability));stat("フェアオッズ",(1/h.probability).toFixed(2)+"倍");stat("期待回収率","");stat("期待利益率","");
+  card.append(metrics);
+  card.append(element("label","","比較オッズ（初期値："+yen(h.finalOdds)+"倍）"));
+  const controls=element("div","controls");
+  const range=element("input");range.type="range";range.min="1";range.max=String(Math.max(100,Math.ceil(h.finalOdds+50)));range.step=".1";range.setAttribute("aria-label",h.horse+" 比較オッズスライダー");
+  const num=element("input");num.type="number";num.min="1";num.max=range.max;num.step=".1";num.setAttribute("aria-label",h.horse+" 比較オッズ数値入力");
+  controls.append(range,num);card.append(controls);
+  const bar=element("div","bar"),fill=element("div","fill");bar.append(fill);card.append(bar);
+  const text=element("div","muted","白い線が期待値1.0の基準です");card.append(text);
+  range.addEventListener("input",()=>setOdds(h,Number(range.value),range,num,metrics,fill));
+  num.addEventListener("input",()=>{const v=Number(num.value);if(Number.isFinite(v)&&v>=1&&v<=Number(range.max))setOdds(h,v,range,num,metrics,fill)});
+  area.append(card);setOdds(h,h.finalOdds,range,num,metrics,fill);
+ });
+ updateRanking();
+}
+function setOdds(h,v,range,num,metrics,fill){
+ v=Math.max(1,Math.min(Number(range.max),Math.round(v*10)/10));h.odds=v;range.value=String(v);num.value=String(v);
+ const ev=h.probability*v,labels=metrics.querySelectorAll("strong");
+ labels[2].textContent=percent(ev);labels[2].className=ev>1?"good":"bad";
+ labels[3].textContent=(ev>=1?"+":"")+((ev-1)*100).toFixed(1)+"%";labels[3].className=ev>1?"good":"bad";
+ fill.style.width=Math.min(100,ev/2*100)+"%";fill.style.background=ev>1?"#40c99e":"#d67b83";
+ updateRanking();
+}
+function updateRanking(){
+ const area=document.querySelector("#ranking");if(!area)return;
+ const tbl=element("table"),head=element("tr");
+ for(const x of ["順位","馬名","オッズ","期待値"])head.append(element("th","",x));
+ tbl.append(head);
+ [...current].sort((a,b)=>b.odds*b.probability-a.odds*a.probability).forEach((r,i)=>{
+  const tr=element("tr");
+  for(const x of [String(i+1),r.horse,yen(r.odds)+"倍",(r.odds*r.probability).toFixed(3)])tr.append(element("td","",x));
+  tbl.append(tr);
+ });area.replaceChildren(tbl);
+}
+async function start(){
+ try{
+  const response=await fetch("./predictions.json",{cache:"no-store"});
+  if(response.ok){const incoming=sanitize(await response.json());if(incoming.dataType==="verified_actual"){data=incoming;document.querySelector("#notice").textContent="検証済み予測データを表示しています。最終オッズは事後分析用です。";}}
+ }catch(e){console.info("デモモード:",e.message)}
+ const select=document.querySelector("#race");for(const race of data.races){const option=element("option","",race.label);option.value=race.id;select.append(option)}
+ select.addEventListener("change",()=>{raceId=select.value;draw()});raceId=data.races[0].id;draw();
+}
+start();
+</script></body></html>
