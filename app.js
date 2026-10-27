@@ -44,7 +44,7 @@ async function start(){
  $('error').hidden=true;try{
   const response=await fetch('./predictions.json',{cache:'no-store'});if(!response.ok)throw Error(`HTTP ${response.status}`);data=validateData(await response.json());
   $('notice').textContent=data.mode==='real'?'検証済みJRA実データ・時系列テストの推定勝率です。最終単勝オッズによる期待値は事後分析です。':'現在はデモ表示です。実際のAI予測ではありません。馬名・日程・勝率・オッズは架空です。';
-  $('data-description').textContent=data.mode==='real'?'過去レースを使った未使用期間の評価結果です。発走前に配信した予想ではありません。最終単勝オッズと実際に購入できたオッズは区別してください。':'AIモデルは未学習です。実データの予測・実測成績は表示していません。';
+  $('data-description').textContent=data.mode==='real'?'試作モデルで、収益性は確認できていません。過去レースを使った未使用期間の評価結果です。発走前に配信した予想ではありません。最終単勝オッズと実際に購入できたオッズは区別してください。':'AIモデルは未学習です。実データの予測・実測成績は表示していません。';
   options('date',[...new Set(data.races.map(r=>r.date))].sort());tracks();$('reset-all').hidden=false;
  }catch(e){$('notice').textContent='予測データの読み込みエラー';$('error').hidden=false;$('error').replaceChildren(element('p','','通信または公開データの検証に失敗しました。未検証の値は表示していません。'));const retry=element('button','','再読み込み');retry.addEventListener('click',start);$('error').append(retry);$('cards').replaceChildren();$('ranking').replaceChildren();$('reset-all').hidden=true;}
 }

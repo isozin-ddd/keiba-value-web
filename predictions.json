@@ -1,40 +1,290 @@
 {
   "schema_version": 1,
-  "mode": "demo",
-  "generated_at": "2026-10-27T00:00:00Z",
-  "model_status": "untrained",
+  "mode": "real",
+  "generated_at": "2026-10-27T08:59:26.091769+00:00",
+  "model_status": "trained",
   "races": [
     {
-      "id": "DEMO",
-      "date": "2026-01-01",
-      "track": "デモ競馬場",
-      "number": 1,
+      "id": "202504020211",
+      "date": "2025-07-27",
+      "track": "新潟",
+      "number": 11,
       "runners": [
         {
           "number": 1,
-          "name": "サンプルA（架空）",
-          "probability": 0.18,
-          "final_odds": 8.2
+          "name": "カパラミプ",
+          "probability": 0.0720300277312563,
+          "final_odds": 199.3
         },
         {
           "number": 2,
-          "name": "サンプルB（架空）",
-          "probability": 0.12,
-          "final_odds": 7.5
+          "name": "エスポワールドロワ",
+          "probability": 0.0587214356271192,
+          "final_odds": 155.3
         },
         {
           "number": 3,
-          "name": "サンプルC（架空）",
-          "probability": 0.25,
-          "final_odds": 4.2
+          "name": "イスラコラソン",
+          "probability": 0.1021676491376644,
+          "final_odds": 30.6
         },
         {
           "number": 4,
-          "name": "その他（架空）",
-          "probability": 0.45,
-          "final_odds": 2.1
+          "name": "ハクサンハナビ",
+          "probability": 0.0827970095866336,
+          "final_odds": 55.7
+        },
+        {
+          "number": 5,
+          "name": "キャンディブーケ",
+          "probability": 0.063048381862634,
+          "final_odds": 24.2
+        },
+        {
+          "number": 6,
+          "name": "タワークライマー",
+          "probability": 0.0366167928347723,
+          "final_odds": 24.0
+        },
+        {
+          "number": 7,
+          "name": "ニシノカクテル",
+          "probability": 0.047119778050316,
+          "final_odds": 18.1
+        },
+        {
+          "number": 8,
+          "name": "リュウノヒルド",
+          "probability": 0.0560319364809833,
+          "final_odds": 42.4
+        },
+        {
+          "number": 9,
+          "name": "ブラックエトワール",
+          "probability": 0.0301401505610156,
+          "final_odds": 58.7
+        },
+        {
+          "number": 10,
+          "name": "ベルリネッタ",
+          "probability": 0.0698790923389473,
+          "final_odds": 2.8
+        },
+        {
+          "number": 11,
+          "name": "ロジステート",
+          "probability": 0.0690641165937998,
+          "final_odds": 5.3
+        },
+        {
+          "number": 12,
+          "name": "ラベンサラ",
+          "probability": 0.0594112081130614,
+          "final_odds": 111.8
+        },
+        {
+          "number": 13,
+          "name": "メモリーフィルム",
+          "probability": 0.0732549102630907,
+          "final_odds": 18.8
+        },
+        {
+          "number": 14,
+          "name": "スウェルティア",
+          "probability": 0.0750048537115731,
+          "final_odds": 10.7
+        },
+        {
+          "number": 15,
+          "name": "シャンハイノハナ",
+          "probability": 0.0549940809136432,
+          "final_odds": 10.1
+        },
+        {
+          "number": 16,
+          "name": "チュッチュポッポ",
+          "probability": 0.0497185761934891,
+          "final_odds": 4.4
         }
-      ]
+      ],
+      "source": {
+        "url": "https://www.jra.go.jp/datafile/seiseki/report/2025/2025-2niigata2.pdf",
+        "page": 6
+      }
+    },
+    {
+      "id": "202504020212",
+      "date": "2025-07-27",
+      "track": "新潟",
+      "number": 12,
+      "runners": [
+        {
+          "number": 1,
+          "name": "マーゴットカーラ",
+          "probability": 0.0585960595884649,
+          "final_odds": 15.9
+        },
+        {
+          "number": 2,
+          "name": "デイジー",
+          "probability": 0.0320954804076498,
+          "final_odds": 12.3
+        },
+        {
+          "number": 3,
+          "name": "ニシノヒミチュ",
+          "probability": 0.08581808473607,
+          "final_odds": 18.0
+        },
+        {
+          "number": 4,
+          "name": "ザハーフェル",
+          "probability": 0.0818470868218981,
+          "final_odds": 352.9
+        },
+        {
+          "number": 5,
+          "name": "ホリーアン",
+          "probability": 0.0458353155852032,
+          "final_odds": 100.1
+        },
+        {
+          "number": 6,
+          "name": "マジカルワード",
+          "probability": 0.0313540378031416,
+          "final_odds": 129.1
+        },
+        {
+          "number": 7,
+          "name": "ドゥムーラン",
+          "probability": 0.0729190316378438,
+          "final_odds": 82.6
+        },
+        {
+          "number": 8,
+          "name": "レモンバーム",
+          "probability": 0.0504649924299431,
+          "final_odds": 4.6
+        },
+        {
+          "number": 9,
+          "name": "ラブリーガール",
+          "probability": 0.081560654483947,
+          "final_odds": 9.4
+        },
+        {
+          "number": 10,
+          "name": "クレオズニードル",
+          "probability": 0.0887566355430295,
+          "final_odds": 24.8
+        },
+        {
+          "number": 11,
+          "name": "ルパヴィヨン",
+          "probability": 0.0845020050013982,
+          "final_odds": 2.6
+        },
+        {
+          "number": 12,
+          "name": "ガーネットウインク",
+          "probability": 0.104094461898738,
+          "final_odds": 6.9
+        },
+        {
+          "number": 13,
+          "name": "アストラッド",
+          "probability": 0.0443784385828972,
+          "final_odds": 37.4
+        },
+        {
+          "number": 14,
+          "name": "イコノスタシス",
+          "probability": 0.0469652693193428,
+          "final_odds": 58.8
+        },
+        {
+          "number": 15,
+          "name": "ロンドンアームズ",
+          "probability": 0.0443784385828972,
+          "final_odds": 37.4
+        },
+        {
+          "number": 16,
+          "name": "ベランジェール",
+          "probability": 0.0464340075775349,
+          "final_odds": 15.0
+        }
+      ],
+      "source": {
+        "url": "https://www.jra.go.jp/datafile/seiseki/report/2025/2025-2niigata2.pdf",
+        "page": 6
+      }
+    },
+    {
+      "id": "202507030212",
+      "date": "2025-07-27",
+      "track": "中京",
+      "number": 12,
+      "runners": [
+        {
+          "number": 1,
+          "name": "ピストンボーイ",
+          "probability": 0.0869541868870235,
+          "final_odds": 31.2
+        },
+        {
+          "number": 2,
+          "name": "ブラックサンライズ",
+          "probability": 0.1191286001013359,
+          "final_odds": 8.4
+        },
+        {
+          "number": 3,
+          "name": "ピースフルナイト",
+          "probability": 0.1096794621188733,
+          "final_odds": 6.9
+        },
+        {
+          "number": 4,
+          "name": "エコロハート",
+          "probability": 0.1496147378862059,
+          "final_odds": 5.2
+        },
+        {
+          "number": 5,
+          "name": "アウクソー",
+          "probability": 0.1010635240229863,
+          "final_odds": 12.9
+        },
+        {
+          "number": 6,
+          "name": "フォティック",
+          "probability": 0.1101541312101841,
+          "final_odds": 17.8
+        },
+        {
+          "number": 7,
+          "name": "チカポコ",
+          "probability": 0.0870236315390473,
+          "final_odds": 27.2
+        },
+        {
+          "number": 8,
+          "name": "スネーフリンガ",
+          "probability": 0.079583050737033,
+          "final_odds": 16.4
+        },
+        {
+          "number": 9,
+          "name": "ウィンストン",
+          "probability": 0.1567986754973105,
+          "final_odds": 1.8
+        }
+      ],
+      "source": {
+        "url": "https://www.jra.go.jp/datafile/seiseki/report/2025/2025-3chukyo2.pdf",
+        "page": 6
+      }
     }
   ]
 }
