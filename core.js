@@ -3,7 +3,7 @@ export function metrics(probability, odds) {
   if (!Number.isFinite(probability) || probability < 0 || probability > 1) throw new Error('勝率が不正です');
   if (!Number.isFinite(odds) || odds < 1 || odds > MAX_ODDS) throw new Error('オッズが範囲外です');
   const ev = probability * odds;
-  return { ev, returnPct: ev * 100, profitPct: (ev - 1) * 100, fairOdds: probability ? 1 / probability : Infinity };
+  return { ev, returnPct: ev * 100, profitPct: (ev - 1) * 100, fairOdds: probability ? 1 / probability : Infinity, breakEvenProbability: 1 / odds, probabilityGap: probability - 1 / odds };
 }
 function exactKeys(object, required, optional = []) {
   if (!object || typeof object !== 'object' || Array.isArray(object)) throw new Error('データ形式が不正です');
@@ -80,6 +80,6 @@ export function validateAnalysis(data){
  exactKeys(data,['schema_version','mode','generated_at','model_version','prediction_created_at','races']);
  if(data.schema_version!==1||data.mode!=='historical_details'||!timestamp(data.generated_at)||(data.prediction_created_at!==null&&!timestamp(data.prediction_created_at))||!text(data.model_version,80)||!Array.isArray(data.races)||data.races.length>1000)throw Error('事後成績データの形式が不正です');
  const ids=new Set();
- for(const r of data.races){exactKeys(r,['id','runners']);if(!/^\d{12}$/.test(r.id)||ids.has(r.id)||!Array.isArray(r.runners)||r.runners.length<2||r.runners.length>18)throw Error('事後レース情報が不正です');ids.add(r.id);const nums=new Set();for(const h of r.runners){exactKeys(h,['number','finish','win_payout_yen']);if(!Number.isInteger(h.number)||h.number<1||h.number>18||nums.has(h.number)||!Number.isInteger(h.finish)||h.finish<1||h.finish>18||!Number.isInteger(h.win_payout_yen)||h.win_payout_yen<0)throw Error('事後成績が不正です');nums.add(h.number);}}
+ for(const r of data.races){exactKeys(r,['id','runners']);if(!/^\d{12}$/.test(r.id)||ids.has(r.id)||!Array.isArray(r.runners)||r.runners.length<2||r.runners.length>18)throw Error('事後レース情報が不正です');ids.add(r.id);const nums=new Set();for(const h of r.runners){exactKeys(h,['number','finish','win_payout_yen'],['history_count','uncertainty','odds_observed_at']);if(h.history_count!==undefined&&h.history_count!==null&&(!Number.isInteger(h.history_count)||h.history_count<0||h.history_count>5))throw Error('履歴件数が不正です');if(h.uncertainty!==undefined&&h.uncertainty!==null)throw Error('未校正の個別誤差範囲は公開できません');if(h.odds_observed_at!==undefined&&h.odds_observed_at!==null&&!timestamp(h.odds_observed_at))throw Error('オッズ取得時刻が不正です');if(!Number.isInteger(h.number)||h.number<1||h.number>18||nums.has(h.number)||!Number.isInteger(h.finish)||h.finish<1||h.finish>18||!Number.isInteger(h.win_payout_yen)||h.win_payout_yen<0)throw Error('事後成績が不正です');nums.add(h.number);}}
  return data;
 }

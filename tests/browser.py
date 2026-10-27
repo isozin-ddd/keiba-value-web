@@ -25,6 +25,9 @@ def run(bt,base,engine,executable=None):
  else:assert '実際のAI予測ではありません' in page.locator('#notice').inner_text()
  assert first.locator('.fair-odds').inner_text()==(f'{1/p:.2f}倍' if p else '∞')
  number.fill('10');assert first.locator('.ev-value').inner_text()==f'{p*10:.3f}倍'
+ assert first.locator('.break-even').inner_text()=='10.0%'
+ assert first.locator('.probability-gap').inner_text()==('+' if p>=.1 else '')+f'{(p-.1)*100:.1f}ポイント'
+ assert '未推定' in first.locator('.uncertainty-note').inner_text()
  assert first.locator('.return-value').inner_text()==f'{p*10*100:.1f}%'
  number.fill('0');assert number.get_attribute('aria-invalid')=='true'
  number.fill('9999');assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Large-value overflow'
@@ -62,6 +65,7 @@ def run(bt,base,engine,executable=None):
   assert f"実際の着順：{result['finish']}着" in page.locator('.result-note').first.inner_text()
   assert str(result['win_payout_yen'])+'円' in page.locator('.result-note').first.inner_text()
   assert details['model_version'] in page.locator('#race-meta').inner_text()
+  if result.get('history_count') is not None:assert str(result['history_count'])+'/5' in page.locator('.history-note').first.inner_text()
  assert page.locator('#date').is_visible() and page.locator('#track').is_visible()
  assert page.locator('[role=meter]').count()==len(race['runners'])
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Horizontal overflow'
@@ -94,6 +98,11 @@ def run(bt,base,engine,executable=None):
  page.get_by_role('button',name='レースのオッズを初期値に戻す').click();assert page.locator('input[type=number]').first.input_value()=='2.5'
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
  page.unroute('**/future.json');assert not errors,errors
+ response=page.goto(base.rstrip('/')+'/reliability.html',wait_until='networkidle');assert response.status==200
+ assert '勝率の校正と検証' in page.locator('h1').inner_text()
+ assert page.locator('svg').count()==1 and '95%' in page.locator('main').inner_text()
+ assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Calibration page overflow'
+ page.screenshot(path=str(out/f'{engine}-reliability.png'),full_page=True)
  context.close();browser.close()
  print(f'{engine}: actual {payload["mode"]} JSON, odds, EV, fair odds, ranking, reset, touch, error, mode switch, actual future state and artificial future controls, dark 390x844: PASS')
 if __name__=='__main__':

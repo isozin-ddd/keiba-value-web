@@ -1,0 +1,40 @@
+<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>競馬AI 勝率の校正と検証</title><style>body{background:#111923;color:#e9f0f8;font:16px system-ui;margin:0;padding:18px;line-height:1.7}main{max-width:960px;margin:auto}a{color:#88dbff}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:8px 4px;border-bottom:1px solid #526070;text-align:right;overflow-wrap:anywhere}th:first-child,td:first-child{text-align:left}svg{width:100%;height:auto;background:#182332;border-radius:12px}details{margin:18px 0}.scroll{overflow:auto}p{overflow-wrap:anywhere} .warn{padding:14px;background:#3c2730;border-radius:10px}</style><main><a href="./">← レース画面</a><h1>勝率の校正と検証</h1>
+<p>公開中の予測モデルはv3です。次の評価は過去の実データによる期間外検証です。予測確率の信頼性を確認するための集計で、個々の馬の勝率が正確であるという保証ではありません。</p>
+<p>train: 2021-01-05〜2025-06-22 (317レース・4524頭)／validation: 2025-07-05〜2025-08-09 (267レース・3410頭)／calibration: 2025-08-17〜2025-10-05 (61レース・848頭)／test: 2026-01-10〜2026-01-11 (43レース・650頭)</p>
+<p class="warn">新候補は未採用。信頼区間と校正を含む事前の採用条件で判定しました。最終テストは2026年1月10〜11日の2開催日で、期間・競馬場への偏りがあります。過去成績の元の公開時刻は未保存のため、発走7日後から利用可能と仮定しています。</p>
+<h2>同じ最終テストでの比較</h2><p>角括弧はレース単位ブートストラップ95%信頼区間です。Brierはレース内二乗誤差和の平均。ECEだけでは性能を判定しません。</p><div class="scroll"><table><tr><th>モデル</th><th>Brier [95% CI]</th><th>Log Loss [95% CI]</th><th>ECE [95% CI]</th><th>1番手的中率</th></tr>
+<tr><td>一様確率</td><td>0.931690 [0.926795, 0.935598]</td><td>2.701404 [2.642508, 2.751174]</td><td>0.000000 [0.000000, 0.000000]</td><td>2.33%</td></tr>
+<tr><td>公開中v3（固定）</td><td>0.923543 [0.913245, 0.932856]</td><td>2.637863 [2.558357, 2.713354]</td><td>0.006283 [0.000940, 0.020412]</td><td>11.63%</td></tr>
+<tr><td>v3＋拡充履歴</td><td>0.922056 [0.911739, 0.931571]</td><td>2.622953 [2.543914, 2.696233]</td><td>0.006402 [0.001163, 0.021967]</td><td>11.63%</td></tr>
+<tr><td>近5走単純モデル</td><td>0.922753 [0.911004, 0.933807]</td><td>2.640484 [2.556728, 2.719661]</td><td>0.010969 [0.001187, 0.025944]</td><td>16.28%</td></tr>
+<tr><td>新候補</td><td>0.925313 [0.919236, 0.931347]</td><td>2.649440 [2.585833, 2.710814]</td><td>0.017750 [0.004150, 0.032873]</td><td>11.63%</td></tr>
+<tr><td>v3＋再校正</td><td>0.924419 [0.917101, 0.930970]</td><td>2.644209 [2.577710, 2.704142]</td><td>0.010705 [0.000947, 0.024184]</td><td>11.63%</td></tr>
+<tr><td>最終オッズ（事後比較）</td><td>0.784260 [0.707099, 0.858338]</td><td>1.888322 [1.641242, 2.144893]</td><td>0.010121 [0.007227, 0.031717]</td><td>32.56%</td></tr>
+</table></div><p>一様確率はレース全体が同じ確率帯へ入ることでECEが0になり得ます。小さいECEだけでは各馬を正しく評価できているとは判定しません。今回の固定区分は以前の10%刻みと異なり、過去報告のECEと直接比較できません。</p><h2>確率校正曲線</h2><p>点は予測勝率の平均と実勝率、縦線は95%区間です。標本60頭未満の確率帯は隣接区間へ統合。表示区間はレース単位ブートストラップとWilson区間の保守的な包絡です。</p>
+<svg viewBox="0 0 440 440" role="img" aria-label="新旧モデルの勝率校正曲線と95%区間"><path d="M65 75V375H365" stroke="#c4cedb" fill="none"/><path d="M65 375L365 75" stroke="#8896a8" stroke-dasharray="6 6"/><text x="65" y="398" text-anchor="middle" fill="#e9f0f8" font-size="15">0%</text><text x="55" y="379" text-anchor="end" fill="#e9f0f8" font-size="15">0%</text><text x="125.0" y="398" text-anchor="middle" fill="#e9f0f8" font-size="15">10%</text><text x="55" y="319.0" text-anchor="end" fill="#e9f0f8" font-size="15">10%</text><text x="185.0" y="398" text-anchor="middle" fill="#e9f0f8" font-size="15">20%</text><text x="55" y="259.0" text-anchor="end" fill="#e9f0f8" font-size="15">20%</text><text x="245.0" y="398" text-anchor="middle" fill="#e9f0f8" font-size="15">30%</text><text x="55" y="199.0" text-anchor="end" fill="#e9f0f8" font-size="15">30%</text><text x="305.0" y="398" text-anchor="middle" fill="#e9f0f8" font-size="15">40%</text><text x="55" y="139.0" text-anchor="end" fill="#e9f0f8" font-size="15">40%</text><text x="365.0" y="398" text-anchor="middle" fill="#e9f0f8" font-size="15">50%</text><text x="55" y="79.0" text-anchor="end" fill="#e9f0f8" font-size="15">50%</text><path d="M100.27488973292158 328.3397780856766V351.893424540736" stroke="#88dbff"/><circle cx="100.27488973292158" cy="342.04545454545456" r="4" fill="#88dbff"/><path d="M123.81031328702794 264.94247736870875V333.24050245800987" stroke="#88dbff"/><circle cx="123.81031328702794" cy="306.1475409836066" r="4" fill="#88dbff"/><polyline points="100.27488973292158,342.04545454545456 123.81031328702794,306.1475409836066" fill="none" stroke="#88dbff"/><text x="70" y="25" fill="#88dbff" font-size="16">公開中v3（固定）</text><path d="M101.3647161931236 331.38055114393273V353.97303468258974" stroke="#ffd166"/><circle cx="101.3647161931236" cy="344.6060037523452" r="4" fill="#ffd166"/><path d="M119.85133563303523 248.61716750530204V323.42341771863465" stroke="#ffd166"/><circle cx="119.85133563303523" cy="292.94871794871796" r="4" fill="#ffd166"/><polyline points="101.3647161931236,344.6060037523452 119.85133563303523,292.94871794871796" fill="none" stroke="#ffd166"/><text x="70" y="50" fill="#ffd166" font-size="16">新候補</text><text x="200" y="430" text-anchor="middle" fill="#e9f0f8">予測勝率</text><text x="20" y="50" fill="#e9f0f8">実勝率</text></svg>
+<h2>公開中v3（固定）の確率帯</h2><p>空の帯も件数0として表示します。20%や30%以上の標本がなければ、その確率帯の校正を確認できたとは扱いません。</p><table><tr><th>予測確率帯</th><th>頭数</th><th>平均予測</th><th>実勝率</th></tr>
+<tr><td>0.0〜2.5%</td><td>0</td><td>—</td><td>—</td></tr>
+<tr><td>2.5〜7.5%</td><td>528</td><td>5.88%</td><td>5.49%</td></tr>
+<tr><td>7.5〜15.0%</td><td>119</td><td>9.62%</td><td>10.92%</td></tr>
+<tr><td>15.0〜25.0%</td><td>3</td><td>16.85%</td><td>33.33%</td></tr>
+<tr><td>25.0〜30.0%</td><td>0</td><td>—</td><td>—</td></tr>
+<tr><td>30.0〜100.0%</td><td>0</td><td>—</td><td>—</td></tr>
+</table><p>統合後の実勝率と95%区間：</p><ul>
+<li>0.0〜7.5%：528頭・40レース／予測5.88%、実勝率5.49% [3.85, 7.78]%</li>
+<li>7.5〜100.0%：122頭・31レース／予測9.80%、実勝率11.48% [6.96, 18.34]%</li>
+</ul>
+<h2>新候補の確率帯</h2><p>空の帯も件数0として表示します。20%や30%以上の標本がなければ、その確率帯の校正を確認できたとは扱いません。</p><table><tr><th>予測確率帯</th><th>頭数</th><th>平均予測</th><th>実勝率</th></tr>
+<tr><td>0.0〜2.5%</td><td>0</td><td>—</td><td>—</td></tr>
+<tr><td>2.5〜7.5%</td><td>533</td><td>6.06%</td><td>5.07%</td></tr>
+<tr><td>7.5〜15.0%</td><td>114</td><td>8.97%</td><td>14.04%</td></tr>
+<tr><td>15.0〜25.0%</td><td>3</td><td>15.49%</td><td>0.00%</td></tr>
+<tr><td>25.0〜30.0%</td><td>0</td><td>—</td><td>—</td></tr>
+<tr><td>30.0〜100.0%</td><td>0</td><td>—</td><td>—</td></tr>
+</table><p>統合後の実勝率と95%区間：</p><ul>
+<li>0.0〜7.5%：533頭・40レース／予測6.06%、実勝率5.07% [3.50, 7.27]%</li>
+<li>7.5〜100.0%：117頭・26レース／予測9.14%、実勝率13.68% [8.60, 21.06]%</li>
+</ul>
+<h2>新候補とv3の差</h2><p>負の値が改善方向です。</p><ul>
+<li>brier: 0.001770 [-0.006718, 0.012374]</li>
+<li>log_loss: 0.011577 [-0.044366, 0.078460]</li>
+</ul><p>個別の馬の勝率不確実性は未校正です。画面の勝率とオッズから計算する期待値に誤差範囲は含まれません。賭け金の最適化・自動購入は実装していません。</p><p>モデルや公開データは承認なしに切り替えません。2026年の継続履歴と真の直近5走の網羅も未完了です。</p></main></html>

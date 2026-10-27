@@ -26,9 +26,9 @@ footer{font-size:13px;color:#b4bfd0;line-height:1.7}
 .race-filters{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}input[type=range]{min-height:48px}button{min-height:44px}a{color:#88dbff}.ev-value{font-variant-numeric:tabular-nums}.number strong{overflow-wrap:anywhere}.bar{margin-top:16px}.input-error{font-size:12px;color:#fca7a7}.card.value-pick{border-color:#52d8ad}#error{background:#381d28;border:1px solid #fc9baf;padding:14px;border-radius:12px}#source{overflow-wrap:anywhere} .number.ev-stat{grid-column:1/-1}
 </style>
 </head>
-<body><header><h1>🐎 競馬AI オッズ・期待値メーター</h1><div class="sub">単勝オッズを動かすと期待値・期待回収率・ランキングが即時に変わります。</div></header>
+<body><header><h1>🐎 競馬AI オッズ・期待値メーター</h1><div class="sub">AI推定勝率と損益分岐勝率を比較できます。オッズを動かすと勝率差・期待値が即時に変わります。</div></header>
 <main><label for="mode">表示モード</label><select id="mode"><option value="past">過去レース分析</option><option value="future">未来レース予測</option></select><div id="notice" class="notice" role="status">公開データを検証しています。</div>
-<div id="filters"><div class="race-filters"><div><label for="date">開催日</label><select id="date"></select></div><div><label for="track">競馬場</label><select id="track"></select></div></div><label for="race">レース選択</label><select id="race"></select>
+<p><a href="./reliability.html">勝率の校正・標本数・95%区間を確認する</a></p><div id="filters"><div class="race-filters"><div><label for="date">開催日</label><select id="date"></select></div><div><label for="track">競馬場</label><select id="track"></select></div></div><label for="race">レース選択</label><select id="race"></select>
 <p id="race-meta" class="muted"></p></div><p id="source" class="muted"></p><button id="reset-all" type="button">レースのオッズを初期値に戻す</button><div id="error" role="alert" hidden></div><div id="cards" class="cards"></div>
 <section id="ranking-section" class="card" style="margin-top:18px"><h2>期待値ランキング</h2><div id="ranking"></div></section></main>
 <footer>期待値倍率＝勝率×単勝オッズ。期待回収率＝期待値倍率×100%。利益率＝(期待値倍率−1)×100%。計算結果は入力勝率が正しい場合の理論値で、利益を保証しません。最終オッズは事後分析用で、発走前に購入できたオッズとは限りません。<p id="data-description">GitHub Pagesで提供される静的アプリです。データを検証しています。</p></footer>

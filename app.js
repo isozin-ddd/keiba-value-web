@@ -13,10 +13,10 @@ function switchMode(){
  if(activeMode==='future'){
   $('notice').textContent=empty?(futureError||future?.message||'未来レースの予測データはありません。正式な出馬表の取得後に表示します。'):'未来レースの発走前予測です。オッズは取得時点の値で、最終確定オッズではありません。 '+data.message;
   if(empty&&future?.status==='ready')$('notice').textContent='掲載したレースは発走時刻を過ぎました。現在利用できる未来レースの予測はありません。';
-  $('data-description').textContent='未来モードは正式な出馬表と予測時点までの検証済み履歴を使用します。確認済み5走の保有は、実際の直近5走を欠けなく収録した保証ではありません。2026年の過去走は未収録です。'+(future?` データ生成：${when(future.generated_at)}／モデル：${future.model_version}`:'');
+  $('data-description').textContent='未来モードは正式な出馬表と予測時点までの検証済み履歴を使用します。確認済み5走の保有は、実際の直近5走を欠けなく収録した保証ではありません。2026年の履歴は一部の評価用レースのみ取得しており、継続した直近履歴は揃っていません。'+(future?` データ生成：${when(future.generated_at)}／モデル：${future.model_version}`:'');
  }else{
   $('notice').textContent=past.mode==='real'?'検証済みJRA実データ・時系列テストの推定勝率です。最終単勝オッズによる期待値は事後分析です。':'現在はデモ表示です。実際のAI予測ではありません。馬名・日程・勝率・オッズは架空です。';
-  $('data-description').textContent=past.mode==='real'?(analysis?.model_version==='jra-v3-20261027'?'v3は28レースのテストで誤差指標が改善しましたが、最終オッズによる参考回収率は29.96%（242点）でした。':'試作モデルで、収益性は確認できていません。')+'過去レースを使った未使用期間の評価結果です。発走前に配信した予想ではありません。最終単勝オッズと実際に購入できたオッズは区別してください。確認済み履歴の保有は直近5走の網羅を保証しません。':'AIモデルは未学習です。実測成績はありません。';
+  $('data-description').textContent=past.mode==='real'?(analysis?.model_version==='jra-v3-20261027'?'公開中のv3は勝率の校正を検証中です。評価期間・標本数・信頼区間は「勝率の校正と検証」で確認できます。':'試作モデルで、収益性は確認できていません。')+'過去レースを使った未使用期間の評価結果です。発走前に配信した予想ではありません。最終単勝オッズと実際に購入できたオッズは区別してください。確認済み履歴の保有は直近5走の網羅を保証しません。':'AIモデルは未学習です。実測成績はありません。';
  }
  if(empty)return;options('date',[...new Set(data.races.map(r=>r.date))].sort());tracks();
 }
@@ -40,10 +40,12 @@ function draw(){
   const stat=(label,value,cls)=>{const outer=element('div','number'+(cls==='ev-value'?' ev-stat':''));outer.append(element('span','muted',label),element('strong',cls,value));stats.append(outer);};
   stat(data.mode==='real'||activeMode==='future'?'AI推定勝率':'デモ勝率',pct(h.probability),'probability');
   stat('フェアオッズ',h.probability?(1/h.probability).toFixed(2)+'倍':'∞','fair-odds');
-  stat('期待回収率','','return-value');stat('期待利益率','','profit-value');stat('期待値倍率','','ev-value');card.append(stats);
+  stat('損益分岐勝率','','break-even');stat('AI勝率との差','','probability-gap');stat('期待回収率','','return-value');stat('期待利益率','','profit-value');stat('期待値倍率','','ev-value');card.append(stats);
   const initial=initialOdds(h)??1;
   const note=activeMode==='future'?(h.prestart_odds===null?'発走前オッズ：未取得（比較開始値1.0倍）':`発走前オッズ：${one(h.prestart_odds)}倍／取得：${when(h.odds_observed_at)}`):data.mode==='demo'?`架空の初期オッズ：${one(initial)}倍`:h.final_odds===null?'最終単勝オッズ：未取得（比較開始値1.0倍）':`収集済み最終単勝オッズ：${one(h.final_odds)}倍（事後分析）`;
   card.append(element('p','muted source-note',note));
+  card.append(element('p','muted uncertainty-note','勝率の個別誤差範囲：未推定。履歴件数やモデル間の差は、勝率の信頼区間ではありません。期待値が高くても推定誤差に注意してください。'));
+  if(activeMode==='past'){const detail=analysis?.races.find(r=>r.id===raceId)?.runners.find(r=>r.number===h.number);card.append(element('p','muted history-note',`データ充足度：${detail?.history_count!=null?'対象レース前の特徴量に使った確認済み過去走 '+detail.history_count+'/5'+(detail.history_count<5?'（履歴不足。実際の出走がないことを意味しません）':'（直近5走の網羅は未確認）'):'履歴件数の記録なし'}。最終オッズ取得時刻：${detail?.odds_observed_at?when(detail.odds_observed_at):'旧公開成果物に記録なし'}。`));}
   if(activeMode==='future')card.append(element('p','muted history-note',`確認済み過去走：${h.history_count}/5${h.history_count<5?'（履歴不足。推定の信頼性に注意）':''}`));
   else{const actual=analysis?.races.find(r=>r.id===raceId)?.runners.find(r=>r.number===h.number);card.append(element('p','muted result-note',actual?`実際の着順：${actual.finish}着／単勝払戻：${actual.win_payout_yen}円（100円当たり・事後）`:'実際の着順・払戻：補足データ未取得'));}
   const label=element('label','','比較オッズ（仮定値）');label.htmlFor=`odds-${h.number}`;card.append(label);
@@ -56,7 +58,7 @@ function draw(){
   function set(v,origin){
    if(!Number.isFinite(v)||v<1||v>MAX_ODDS){error.textContent='1.0〜9999.0倍で入力してください';error.hidden=false;num.setAttribute('aria-invalid','true');return;}
    v=Math.round(v*10)/10;h.odds=v;memory.set(key(h),v);range.max=Math.min(MAX_ODDS,Math.max(Number(range.max),v));range.value=v;if(origin!==num)num.value=one(v);error.hidden=true;num.removeAttribute('aria-invalid');
-   const m=metrics(h.probability,v);card.querySelector('.return-value').textContent=pct(m.ev);card.querySelector('.profit-value').textContent=(m.profitPct>=0?'+':'')+m.profitPct.toFixed(1)+'%';card.querySelector('.ev-value').textContent=m.ev.toFixed(3)+'倍';
+   const m=metrics(h.probability,v);card.querySelector('.break-even').textContent=pct(m.breakEvenProbability);card.querySelector('.probability-gap').textContent=(m.probabilityGap>=0?'+':'')+(m.probabilityGap*100).toFixed(1)+'ポイント';card.querySelector('.return-value').textContent=pct(m.ev);card.querySelector('.profit-value').textContent=(m.profitPct>=0?'+':'')+m.profitPct.toFixed(1)+'%';card.querySelector('.ev-value').textContent=m.ev.toFixed(3)+'倍';
    card.classList.toggle('value-pick',m.ev>1);fill.style.width=Math.min(100,m.ev*50)+'%';fill.style.background=m.ev>1?'#40c99e':'#d67b83';bar.setAttribute('aria-valuenow',Math.min(2,m.ev));bar.setAttribute('aria-valuetext',`期待値倍率${m.ev.toFixed(3)}`);
    verdict.textContent=m.ev>1?'モデル上の妙味：期待値1.0超':Math.abs(m.ev-1)<1e-9?'損益分岐点：期待値1.0':'期待値1.0未満';updateRanking();
   }
