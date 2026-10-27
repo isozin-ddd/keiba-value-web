@@ -11,12 +11,12 @@ function switchMode(){
  const empty=!data||!data.races.length;
  $('filters').hidden=empty;$('ranking-section').hidden=empty;$('reset-all').hidden=empty;$('cards').replaceChildren();$('ranking').replaceChildren();$('source').replaceChildren();
  if(activeMode==='future'){
-  $('notice').textContent=empty?(futureError||future?.message||'未来レースの予測データはありません。正式な出馬表の取得後に表示します。'):'未来レースの発走前予測です。オッズは取得時点の値で、最終確定オッズではありません。';
+  $('notice').textContent=empty?(futureError||future?.message||'未来レースの予測データはありません。正式な出馬表の取得後に表示します。'):'未来レースの発走前予測です。オッズは取得時点の値で、最終確定オッズではありません。 '+data.message;
   if(empty&&future?.status==='ready')$('notice').textContent='掲載したレースは発走時刻を過ぎました。現在利用できる未来レースの予測はありません。';
-  $('data-description').textContent='未来モードは正式な出馬表と予測時点までの検証済み履歴を使用します。履歴不足と試作モデルの精度に注意してください。'+(future?` データ生成：${when(future.generated_at)}／モデル：${future.model_version}`:'');
+  $('data-description').textContent='未来モードは正式な出馬表と予測時点までの検証済み履歴を使用します。確認済み5走の保有は、実際の直近5走を欠けなく収録した保証ではありません。2026年の過去走は未収録です。'+(future?` データ生成：${when(future.generated_at)}／モデル：${future.model_version}`:'');
  }else{
   $('notice').textContent=past.mode==='real'?'検証済みJRA実データ・時系列テストの推定勝率です。最終単勝オッズによる期待値は事後分析です。':'現在はデモ表示です。実際のAI予測ではありません。馬名・日程・勝率・オッズは架空です。';
-  $('data-description').textContent=past.mode==='real'?'試作モデルで、収益性は確認できていません。過去レースを使った未使用期間の評価結果です。発走前に配信した予想ではありません。最終単勝オッズと実際に購入できたオッズは区別してください。':'AIモデルは未学習です。実測成績はありません。';
+  $('data-description').textContent=past.mode==='real'?(analysis?.model_version==='jra-v3-20261027'?'v3は28レースのテストで誤差指標が改善しましたが、最終オッズによる参考回収率は29.96%（242点）でした。':'試作モデルで、収益性は確認できていません。')+'過去レースを使った未使用期間の評価結果です。発走前に配信した予想ではありません。最終単勝オッズと実際に購入できたオッズは区別してください。確認済み履歴の保有は直近5走の網羅を保証しません。':'AIモデルは未学習です。実測成績はありません。';
  }
  if(empty)return;options('date',[...new Set(data.races.map(r=>r.date))].sort());tracks();
 }

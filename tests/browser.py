@@ -42,6 +42,26 @@ def run(bt,base,engine,executable=None):
   page.select_option('#race',raceopts[-1]);assert page.locator('#race').input_value()==raceopts[-1]
   other=next(r for r in payload['races'] if r['id']==raceopts[-1]);assert page.locator('#cards .card').count()==len(other['runners'])
   page.select_option('#race',selected)
+ # Switch actual dates/tracks, even when every public race is numbered 11R.
+ saved_date=page.locator('#date').input_value();saved_track=page.locator('#track').input_value()
+ page.locator('input[type=number]').first.fill('7.3')
+ for date in sorted(set(r['date'] for r in payload['races'])):
+  page.select_option('#date',date)
+  for track in dict.fromkeys(r['track'] for r in payload['races'] if r['date']==date):
+   page.select_option('#track',track)
+   for target in [r for r in payload['races'] if r['date']==date and r['track']==track]:
+    page.select_option('#race',target['id'])
+    assert page.locator('#cards .card').count()==len(target['runners'])
+ page.select_option('#date',saved_date);page.select_option('#track',saved_track);page.select_option('#race',selected)
+ assert page.locator('input[type=number]').first.input_value()=='7.3'
+ page.get_by_role('button',name='レースのオッズを初期値に戻す').click()
+ details=page.request.get(base.rstrip('/')+'/analysis.json').json()
+ actual=next((r for r in details['races'] if r['id']==race['id']),None)
+ if actual:
+  result=next(x for x in actual['runners'] if x['number']==h['number'])
+  assert f"実際の着順：{result['finish']}着" in page.locator('.result-note').first.inner_text()
+  assert str(result['win_payout_yen'])+'円' in page.locator('.result-note').first.inner_text()
+  assert details['model_version'] in page.locator('#race-meta').inner_text()
  assert page.locator('#date').is_visible() and page.locator('#track').is_visible()
  assert page.locator('[role=meter]').count()==len(race['runners'])
  assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),'Horizontal overflow'
